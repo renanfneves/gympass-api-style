@@ -4,3 +4,6 @@ build
 
 # Envs
 .env
+
+# Files
+package-lock.json
