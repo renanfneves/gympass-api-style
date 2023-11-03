@@ -20,7 +20,9 @@ export async function authenticate(
     const { user } = await authenticateUseCase.execute({ email, password })
 
     const token = await reply.jwtSign(
-      {},
+      {
+        role: user.role,
+      },
       {
         sign: {
           sub: user.id,
@@ -28,7 +30,29 @@ export async function authenticate(
       },
     )
 
-    return reply.status(200).send({ token })
+    const refreshToken = await reply.jwtSign(
+      {
+        role: user.role,
+      },
+      {
+        sign: {
+          sub: user.id,
+          expiresIn: '7d',
+        },
+      },
+    )
+
+    return reply
+      .setCookie('refreshToken', refreshToken, {
+        path: '/',
+        secure: true, // it encrypts the cookie
+        sameSite: true, // it says the cookie can only be accessed inside the same domain
+        httpOnly: true, // it ensures the cookie will be just used in the api
+      })
+      .status(200)
+      .send({
+        token,
+      })
   } catch (error) {
     if (error instanceof UserAlreadyExistsError) {
       return reply.status(400).send({
@@ -38,6 +62,4 @@ export async function authenticate(
 
     throw error
   }
-
-  return reply.status(200).send()
 }
