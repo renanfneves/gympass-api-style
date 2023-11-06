@@ -5,6 +5,3 @@ coverage
 
 # Envs
 .env
-
-# Files
-package-lock.json
